@@ -134,6 +134,22 @@
         let redIcon = L.icon({ iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
                                 iconSize: [25, 41],
                                 iconAnchor: [12, 41]});
+        let greenIcon = L.icon({ iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
+                                iconSize: [25, 41],
+                                iconAnchor: [12, 41]});
+        
+
+        function calculateDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371; 
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = 
+                Math.sin(dLat/2) * Math.sin(dLat/2) +
+                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                Math.sin(dLon/2) * Math.sin(dLon/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            return R * c > 3;
+        }                        
         async function setLocation() {
             markerGroup.clearLayers();
             response = await fetch(`http://localhost:8000/locations`, { method: "GET",})
@@ -145,8 +161,10 @@
                 data = data.data;
                 for (let location of data) {
                     res = await fetch(`http://localhost:8000/user_by_id?id=${location.id}`, { method: "GET",})
-                    teacher_data = await res.json();
-                    if (teacher_data.data.role === "student") {
+                    person_data = await res.json();
+                    if (person_data.data.role === "student") {
+                        person_data.data.class_id
+                        res2 = await fetch(`http://localhost:8000/user_by_id?id=${location.id}`, { method: "GET",})
                         L.marker([location.lat, location.lon], {title: `Latitude: ${location.lat} Longitude: ${location.lon}`}).addTo(markerGroup)
                     } else {
                         L.marker([location.lat, location.lon], {title:`Latitude: ${location.lat} Longitude: ${location.lon}`, icon: redIcon }).addTo(markerGroup)

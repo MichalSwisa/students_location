@@ -101,69 +101,63 @@
     
     inputfield.onkeyup = async function(event) {
       if(event.key === "Enter"){
-        const parameter = inputfield.value;
-        let url ='http://localhost:8000';
-        all = false;
+        if (localStorage.getItem("role") === "teacher") {
+          const parameter = inputfield.value;
+          let url ='http://localhost:8000';
+          all = false;
 
-        if(selectedOption == "student-id"){
-          url += `/students?teacher_id=${id}&id=${parameter}`;
-        }
-        else if(selectedOption == "teacher-id"){
-          url += `/teachers?teacher_id=${id}&id=${parameter}`;
-        }
-        else if(selectedOption == "student-name"){
-          url += `/students?teacher_id=${id}&full_name=${parameter}`;
-        }
-        else if(selectedOption == "teacher-name"){
-          url += `/teachers?teacher_id=${id}&full_name=${parameter}`;
-        }
-        else if(selectedOption == "student-class"){
-          url += `/students?teacher_id=${id}&class_id=${parameter}`;
-        }
-        else if(selectedOption == "teacher-class"){
-          url += `/teachers?teacher_id=${id}&class_id=${parameter}`;
-        }
-        else if(selectedOption == "all-student-class"){
-            url += `/students?teacher_id=${id}&all=${true}`;
-        }
-        else{
-          all = true;
-          url += `/all?teacher_id=${id}`;
-        }
-
-        const response = await fetch(url, { method: "GET",})
-        const data = await response.json();
-
-
-        if(data.error){
-          alert("You should be a teacher to see the data!");
-        }
-        else{
-          if (localStorage.getItem("role") === "teacher") {
-            tableData = data.data;
-            
-            document.getElementById("table-body").innerHTML = "";
-
-            if(tableData.length === 0){
-              document.getElementById("table-body").innerHTML = `<tr>
-                                                                <td>x</td>
-                                                                <td>x</td>
-                                                                <td>x</td>
-                                                                </tr>`;
-            } else {
-              for (let person of tableData) {
-                let row = `<tr>
-                          <td>${person.id}</td>
-                          <td>${person.full_name}</td>
-                          <td>${person.class_id}</td>
-                          </tr>`;
-                document.getElementById("table-body").innerHTML += row;
-              }
-            }
-
-          } else {
-              alert("You should be a teacher to see the data!");
+          if(selectedOption == "student-id"){
+            url += `/students?id=${parameter}`;
           }
+          else if(selectedOption == "teacher-id"){
+            url += `/teachers?id=${parameter}`;
+          }
+          else if(selectedOption == "student-name"){
+            url += `/students?full_name=${parameter}`;
+          }
+          else if(selectedOption == "teacher-name"){
+            url += `/teachers?full_name=${parameter}`;
+          }
+          else if(selectedOption == "student-class"){
+            url += `/students?class_id=${parameter}`;
+          }
+          else if(selectedOption == "teacher-class"){
+            url += `/teachers?class_id=${parameter}`;
+          }
+          else if(selectedOption == "all-student-class"){
+            url += `/students?teacher_id=${id}&all=${true}`;
+          }
+          else{
+            all = true;
+            url += `/all`;
+          }
+
+          const response = await fetch(url, { method: "GET",})
+          const data = await response.json();
+
+          tableData = data.data;
+            
+          document.getElementById("table-body").innerHTML = "";
+
+          if(tableData.length === 0){
+            document.getElementById("table-body").innerHTML = `<tr>
+                                                              <td>x</td>
+                                                              <td>x</td>                                                                
+                                                              <td>x</td>
+                                                              </tr>`
+          } else {
+            for (let person of tableData) {
+              let row = `<tr>
+                        <td>${person.id}</td>
+                        <td>${person.full_name}</td>
+                        <td>${person.class_id}</td>                          
+                        </tr>`;
+                document.getElementById("table-body").innerHTML += row;
+            }
+          }
+
+        } else {
+            alert("You should be a teacher to see the data!");
         }
       }
     }

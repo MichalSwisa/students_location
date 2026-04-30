@@ -105,60 +105,41 @@ def add_teacher(teacher: Teacher):
     
     except Exception as e:
         return {"error": f"Error in adding teacher: {str(e)}"}
-    
 
-@app.post("/teachers")
-def add_teacher(teacher: Teacher):
-    try:
-        response = supabase.table("Users").insert({
-            "id": teacher.id,
-            "full_name": teacher.full_name,
-            "class_id": teacher.class_id,
-            "role": "teacher"
-        }).execute()
-        
-        if not response.data:
-            return {"error": "Failed to add teacher"}
-        
-        return response.data[0]
-    
-    except Exception as e:
-        return {"error": f"Error in adding teacher: {str(e)}"}
-    
     
 @app.get("/students")
-def get_students(teacher_id: int, id: int | None = None, full_name: str | None = None, class_id: str | None = None, all: bool | None = None):
-    temp_teacher = supabase.table("Users").select("*").eq("id", teacher_id).execute()  #verify that a teacher asking
-    if temp_teacher.data and len(temp_teacher.data) > 0:
-        teacher = temp_teacher.data[0]
-        if id:
-            return {"data": supabase.table("Users").select("*").eq("id", id).eq("role", "student").execute().data}
-        elif full_name:
-            return {"data": supabase.table("Users").select("*").eq("full_name", full_name).eq("role", "student").execute().data}
-        elif class_id:
-            return {"data": supabase.table("Users").select("*").eq("class_id", class_id).eq("role", "student").execute().data}
-        elif teacher_id:
+def get_students(teacher_id: int | None = None, id: int  | None = None, full_name: str | None = None, class_id: str | None = None, all: bool | None = None):
+    if id:
+        return {"data": supabase.table("Users").select("*").eq("id", id).eq("role", "student").execute().data}
+    elif full_name:
+        return {"data": supabase.table("Users").select("*").eq("full_name", full_name).eq("role", "student").execute().data}
+    elif class_id:
+        return {"data": supabase.table("Users").select("*").eq("class_id", class_id).eq("role", "student").execute().data}
+    elif teacher_id:
+        temp_teacher = supabase.table("Users").select("*").eq("id", teacher_id).execute()
+        if temp_teacher.data and len(temp_teacher.data) > 0:
+            teacher = temp_teacher.data[0]
             return {"data": supabase.table("Users").select("*").eq("class_id", teacher["class_id"]).eq("role", "student").execute().data}
-        elif all:
-            return {"data": supabase.table("Users").select("*").eq("role", "student").execute().data}
+        else:
+            return {"error": "Teacher not found or invalid teacher_id"}
+    elif all:
+        return {"data": supabase.table("Users").select("*").eq("role", "student").execute().data}
     else:
-        return {"error": "Teacher not found or invalid teacher_id"}
+        return {}   
+    
 
 
 @app.get("/teachers")
-def get_teachers(teacher_id: int, id: int | None = None, full_name: str | None = None, class_id: str | None = None):
-    temp_teacher = supabase.table("Users").select("*").eq("id", teacher_id).execute()  #verify that a teacher asking
-    if temp_teacher.data and len(temp_teacher.data) > 0:
-        if id:
-            return {"data": supabase.table("Users").select("*").eq("id", id).eq("role", "teacher").execute().data}
-        elif full_name:
-            return {"data": supabase.table("Users").select("*").eq("full_name", full_name).eq("role", "teacher").execute().data}
-        elif class_id:
-            return {"data": supabase.table("Users").select("*").eq("class_id", class_id).eq("role", "teacher").execute().data}
-        else:
-            return {"data": supabase.table("Users").select("*").eq("role", "teacher").execute().data}
+def get_teachers(id: int | None = None, full_name: str | None = None, class_id: str | None = None):
+    if id:
+        return {"data": supabase.table("Users").select("*").eq("id", id).eq("role", "teacher").execute().data}
+    elif full_name:
+        return {"data": supabase.table("Users").select("*").eq("full_name", full_name).eq("role", "teacher").execute().data}
+    elif class_id:
+        return {"data": supabase.table("Users").select("*").eq("class_id", class_id).eq("role", "teacher").execute().data}
     else:
-        return {"error": "Teacher not found or invalid teacher_id"}
+        return {"data": supabase.table("Users").select("*").eq("role", "teacher").execute().data}
+
     
 
 @app.get("/user_by_id")
@@ -171,12 +152,8 @@ def get_user_by_id(id: int):
 
 
 @app.get("/all")
-def get_all(teacher_id: int):
-    temp_teacher = supabase.table("Users").select("*").eq("id", teacher_id).execute()  #verify that a teacher asking
-    if temp_teacher.data and len(temp_teacher.data) > 0:
-        return {"data": supabase.table("Users").select("*").execute().data}
-    else:
-        return {"error": "Teacher not found or invalid teacher_id"}
+def get_all():
+    return {"data": supabase.table("Users").select("*").execute().data}
 
         
 @app.get("/login")
