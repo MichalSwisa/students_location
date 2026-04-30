@@ -1,3 +1,5 @@
+import time
+from urllib import response
 
 from dotenv import load_dotenv
 import os
@@ -57,6 +59,14 @@ def get_supabase_client():
     
     supabase = create_client(url, key)
     return supabase
+
+def get_location_random():
+    import random
+    lat = 31.783 + random.uniform(-1, 1)
+    lon = 35.216 + random.uniform(-1, 1)
+    #random timestamp in the last half hour
+    timestamp = int((time.time() - random.uniform(0, 1800)) * 1000)
+    return {"ID": "123456789", "Coordinates": {"Latitude": {"Degrees": lat, "Minutes": "00", "Seconds": "00"}, "Longitude": {"Degrees": lon, "Minutes": "00", "Seconds": "00"}}, "Time": timestamp}
 
 
 @app.post("/students")
@@ -149,6 +159,15 @@ def get_teachers(teacher_id: int, id: int | None = None, full_name: str | None =
             return {"data": supabase.table("Users").select("*").eq("role", "teacher").execute().data}
     else:
         return {"error": "Teacher not found or invalid teacher_id"}
+    
+
+@app.get("/user_by_id")
+def get_user_by_id(id: int):
+    user = supabase.table("Users").select("*").eq("id", id).execute()
+    if user.data and len(user.data) > 0:
+        return {"data": user.data[0]}
+    else:
+        return {"error": "User not found"}
 
 
 @app.get("/all")
@@ -168,3 +187,78 @@ def get_all_login_data(id: int):
         return {"innerdata":person.data[0]}
     else:
         return {"error": "person not in system"}
+    
+@app.post("/activate_location")
+def activate_location(id: int):
+    try:
+        location = get_location_random()
+        print("Generated random location:", location)
+        response = supabase.table("Locations").insert({
+            "id": id,
+            "lat": location["Coordinates"]["Latitude"]["Degrees"],
+            "lon": location["Coordinates"]["Longitude"]["Degrees"],
+        }).execute()
+        print("LOCATION:", location)
+        print("SUPABASE RESPONSE:", response)
+        print("DATA:", response.data)
+        
+        if not response.data:
+            return {"error": "Failed to activate location"}
+        
+        return response.data[0]
+    
+    except Exception as e:
+        print("Error in activating location:", str(e))
+        return {"error": f"Error in activating location: {str(e)}"}
+    
+    
+@app.post("/deactivate_location")
+def deactivate_location(id: int):
+    try:
+        response = supabase.table("Locations").delete().eq("id", id).execute()
+        
+        if not response.data:
+            return {"error": "Failed to deactivate location"}
+        
+        return response.data[0] 
+    
+    except Exception as e:
+        return {"error": f"Error in deactivating location: {str(e)}"}
+    
+    
+@app.get("/locations")
+def get_locations():
+    try:
+        response = supabase.table("Locations").select("*").execute()
+        
+        if not response.data:
+            return {"error": "Failed to get locations"}
+        
+        return {"data": response.data}
+    
+    except Exception as e:
+        return {"error": f"Error in getting locations: {str(e)}"}
+    
+
+@app.get("/update_locations")
+def update_location():
+    try:
+        response = get_locations()
+        if "error" in response:
+            return {"error": "Failed to update location"}
+        for location in response["data"]:
+            addto = (location["lat"] + location["lon"]) % 0.02 - 0.01
+            if addto % 0.01 == 0:
+                addto = -addto
+            response2 = supabase.table("Locations").update({
+                "lat": location["lat"] + addto,
+                "lon": location["lon"] + addto,
+                }).eq("id", location["id"]).execute()
+            if not response2.data:
+                return {"error": "Failed to update location"}
+        
+        return {"message": "Success"} 
+    
+    except Exception as e:
+        return {"error": f"Error in updating location: {str(e)}"}
+

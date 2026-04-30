@@ -28,6 +28,8 @@
     <div class="btn-field">
       <button type="button" id="signoutBtn">Sign Out</button>
       <button type="button" id="backBtn">Back</button>
+      <button type="button" id="activatelocationBtn">Activate Location</button>
+      <button type="button" id="deactivatelocationBtn">Deactivate Location</button>
     </div>
   </div>
 
@@ -170,7 +172,10 @@
 
     let signoutBtn = document.getElementById("signoutBtn");
     let backBtn = document.getElementById("backBtn");
+    let activatelocationBtn = document.getElementById("activatelocationBtn");
+    let deactivatelocationBtn = document.getElementById("deactivatelocationBtn");
 
+    localStorage.setItem("location_active_num", 0);
     signoutBtn.onclick = function() {
       localStorage.clear();
       window.location.href = "index.html";
@@ -178,6 +183,30 @@
 
     backBtn.onclick = function() {
       window.location.href = "index.html";
+    }
+
+    activatelocationBtn.onclick = async function() {
+      const response = await fetch(`http://localhost:8000/activate_location?id=${id}`, { method: "POST",})
+      const data = await response.json();
+
+      if(data.error){
+        alert("Failed to activate location!");
+      }
+      else{
+        alert("Location activated successfully!");
+      }
+    }
+
+    deactivatelocationBtn.onclick = async function() {
+      const response = await fetch(`http://localhost:8000/deactivate_location?id=${id}`, { method: "POST",})
+      const data = await response.json();
+
+      if(data.error){
+        alert("Failed to deactivate location!");
+      }
+      else{
+        alert("Location deactivated successfully!");
+      }
     }
   </script>
 </body>

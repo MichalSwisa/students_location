@@ -5,38 +5,48 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Trip Management</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+     integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+     crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+     crossorigin=""></script>
+     
     <script src="https://kit.fontawesome.com/620acfe083.js" crossorigin="anonymous"></script>
   </head>
   <body>
     <!--<div id="root"></div>-->
     <!--<h1>Students Locations Management</h1>-->
+    <div class="divide-page">
+        <div class="form-box">
+            <h1 id="formTitle">Add Teacher or Student</h1>
+            <form id="formID">
+                <div class="input-group">
+                    <div class="input-field">
+                        <i class="fa-solid fa-id-card"></i>
+                        <input type="number" id="ID" placeholder="ID">
+                    </div>
+                    <div class="input-field">
+                        <i class="fa-solid fa-user"></i>
+                        <input type="text" id="name" placeholder="Full Name">
+                    </div>
+                    <div class="input-field">
+                        <i class="fa-solid fa-chalkboard-user"></i>
+                        <input type="text" id="class" placeholder="Class">
+                    </div>
+                </div>
 
-    <div class="form-box">
-        <h1 id="formTitle">Add Teacher or Student</h1>
-        <form id="formID">
-            <div class="input-group">
-                <div class="input-field">
-                    <i class="fa-solid fa-id-card"></i>
-                    <input type="number" id="ID" placeholder="ID">
+                <div class="btn-field">
+                    <button type="button" id="addstudentBtn">Add Student</button>
+                    <button type="button" id="addteacherBtn">Add Teacher</button>
+                    <button type="button" id="loginBtn">Login</button>
+                    <button type="button" id="enterBtn">Enter</button>
                 </div>
-                <div class="input-field">
-                    <i class="fa-solid fa-user"></i>
-                    <input type="text" id="name" placeholder="Full Name">
-                </div>
-                <div class="input-field">
-                    <i class="fa-solid fa-chalkboard-user"></i>
-                    <input type="text" id="class" placeholder="Class">
-                </div>
-            </div>
-
-            <div class="btn-field">
-                <button type="button" id="addstudentBtn">Add Student</button>
-                <button type="button" id="addteacherBtn">Add Teacher</button>
-                <button type="button" id="loginBtn">Login</button>
-                <button type="button" id="enterBtn">Enter</button>
-            </div>
-        </form>
+            </form>
+        </div>
+        <div id="map" class="map-section"></div>
     </div>
+
 
     <script>
         let addStudentBtn = document.getElementById("addstudentBtn"); 
@@ -112,6 +122,53 @@
                 alert("You should login before entering the dashboard!");
             }
         }
+
+
+        let map = L.map('map').setView([31.783, 35.216], 8);
+        L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+            }).addTo(map);
+
+        let markerGroup = L.layerGroup().addTo(map);
+        let redIcon = L.icon({ iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+                                iconSize: [25, 41],
+                                iconAnchor: [12, 41]});
+        async function setLocation() {
+            markerGroup.clearLayers();
+            response = await fetch(`http://localhost:8000/locations`, { method: "GET",})
+            data = await response.json();
+            if(data.error){
+                alert("Failed to get location!");
+            }
+            else{
+                data = data.data;
+                for (let location of data) {
+                    res = await fetch(`http://localhost:8000/user_by_id?id=${location.id}`, { method: "GET",})
+                    teacher_data = await res.json();
+                    if (teacher_data.data.role === "student") {
+                        L.marker([location.lat, location.lon], {title: `Latitude: ${location.lat} Longitude: ${location.lon}`}).addTo(markerGroup)
+                    } else {
+                        L.marker([location.lat, location.lon], {title:`Latitude: ${location.lat} Longitude: ${location.lon}`, icon: redIcon }).addTo(markerGroup)
+                    }
+                    
+                }
+            }
+        }
+        async function updateLocation() {
+            response = await fetch(`http://localhost:8000/update_locations`, { method: "GET",})
+            data = await response.json();
+            if(data.error){
+                alert("Failed to update location!");
+            }
+            else{
+                data = data.data;
+                setLocation();
+            }
+        }
+
+        setLocation();
+        setInterval(updateLocation, 6000);
     </script>
 
   </body>
