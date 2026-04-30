@@ -13,3 +13,6 @@
 #### 5. Open cmd and enter backend folder, then run "uvicorn main:app --reload"
 #### 6. Open cmd and enter frontend folder, then run "python -m http.server 5500"
 #### 7. use the web
+
+### Note:
+#### If I understand correctly, a teacher is supposed to be able to detect if her student is far from her. If that is indeed the case, my implementation of the bonus is partial. I implemented that if there is a student who is far from her teacher, she is in red, but there is no display that links a student to her group. I think it's just a bit more playing with the fields, but I'm afraid of delaying the submission, so I'm leaving it partial.

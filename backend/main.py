@@ -62,8 +62,8 @@ def get_supabase_client():
 
 def get_location_random():
     import random
-    lat = 31.783 + random.uniform(-1, 1)
-    lon = 35.216 + random.uniform(-1, 1)
+    lat = 31.783 + random.uniform(-0.3, 0.3)
+    lon = 35.216 + random.uniform(-0.3, 0.3)
     #random timestamp in the last half hour
     timestamp = int((time.time() - random.uniform(0, 1800)) * 1000)
     return {"ID": "123456789", "Coordinates": {"Latitude": {"Degrees": lat, "Minutes": "00", "Seconds": "00"}, "Longitude": {"Degrees": lon, "Minutes": "00", "Seconds": "00"}}, "Time": timestamp}
@@ -169,15 +169,12 @@ def get_all_login_data(id: int):
 def activate_location(id: int):
     try:
         location = get_location_random()
-        print("Generated random location:", location)
+
         response = supabase.table("Locations").insert({
             "id": id,
             "lat": location["Coordinates"]["Latitude"]["Degrees"],
             "lon": location["Coordinates"]["Longitude"]["Degrees"],
         }).execute()
-        print("LOCATION:", location)
-        print("SUPABASE RESPONSE:", response)
-        print("DATA:", response.data)
         
         if not response.data:
             return {"error": "Failed to activate location"}
@@ -185,7 +182,6 @@ def activate_location(id: int):
         return response.data[0]
     
     except Exception as e:
-        print("Error in activating location:", str(e))
         return {"error": f"Error in activating location: {str(e)}"}
     
     
@@ -204,9 +200,13 @@ def deactivate_location(id: int):
     
     
 @app.get("/locations")
-def get_locations():
+def get_locations(id: int | None = None):
     try:
-        response = supabase.table("Locations").select("*").execute()
+        response = None
+        if id:
+            response = supabase.table("Locations").select("*").eq("id", id).execute()
+        else:
+            response = supabase.table("Locations").select("*").execute()
         
         if not response.data:
             return {"error": "Failed to get locations"}
@@ -224,15 +224,25 @@ def update_location():
         if "error" in response:
             return {"error": "Failed to update location"}
         for location in response["data"]:
-            addto = (location["lat"] + location["lon"]) % 0.02 - 0.01
+            addto = (location["lat"] + location["lon"]) % 0.02 - 0.03
             if addto % 0.01 == 0:
                 addto = -addto
-            response2 = supabase.table("Locations").update({
-                "lat": location["lat"] + addto,
-                "lon": location["lon"] + addto,
+            if location["lat"] + addto > 33.3 or location["lat"] + addto < 29.5 or location["lon"] + addto > 35.4 or location["lon"] + addto < 34.2:
+                random_location = get_location_random()
+
+                response3 = supabase.table("Locations").update({
+                    "lat": random_location["Coordinates"]["Latitude"]["Degrees"],
+                    "lon": random_location["Coordinates"]["Longitude"]["Degrees"]
                 }).eq("id", location["id"]).execute()
-            if not response2.data:
-                return {"error": "Failed to update location"}
+                if not response3.data:
+                    return {"error": "Failed to update location"}
+            else:   
+                response2 = supabase.table("Locations").update({
+                    "lat": location["lat"] + addto,
+                    "lon": location["lon"] + addto,
+                    }).eq("id", location["id"]).execute()
+                if not response2.data:
+                    return {"error": "Failed to update location"}
         
         return {"message": "Success"} 
     

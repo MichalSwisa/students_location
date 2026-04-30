@@ -149,7 +149,9 @@
                 Math.sin(dLon/2) * Math.sin(dLon/2);
             const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
             return R * c > 3;
-        }                        
+        }  
+        
+        
         async function setLocation() {
             markerGroup.clearLayers();
             response = await fetch(`http://localhost:8000/locations`, { method: "GET",})
@@ -163,11 +165,23 @@
                     res = await fetch(`http://localhost:8000/user_by_id?id=${location.id}`, { method: "GET",})
                     person_data = await res.json();
                     if (person_data.data.role === "student") {
-                        person_data.data.class_id
-                        res2 = await fetch(`http://localhost:8000/user_by_id?id=${location.id}`, { method: "GET",})
-                        L.marker([location.lat, location.lon], {title: `Latitude: ${location.lat} Longitude: ${location.lon}`}).addTo(markerGroup)
+                        teacher_of_student = await fetch(`http://localhost:8000/teachers?class_id=${person_data.data.class_id}`, { method: "GET",});
+                        teacher_of_student_data = await teacher_of_student.json();
+                        if(teacher_of_student_data.data && teacher_of_student_data.data.length > 0){
+                            teacher_location = await fetch(`http://localhost:8000/locations?id=${teacher_of_student_data.data[0].id}`, { method: "GET",});
+                            teacher_location_data = await teacher_location.json();
+                            teacher_of_student_lat = teacher_location_data.data[0].lat;
+                            teacher_of_student_lon = teacher_location_data.data[0].lon;
+                            if(calculateDistance(location.lat, location.lon, teacher_of_student_lat, teacher_of_student_lon)){
+                                L.marker([location.lat, location.lon], {title: `Latitude: ${location.lat} Longitude: ${location.lon}`, icon: redIcon,}).addTo(markerGroup)
+                            } else {
+                                L.marker([location.lat, location.lon], {title: `Latitude: ${location.lat} Longitude: ${location.lon}`, icon: greenIcon,}).addTo(markerGroup)
+                            }
+                        } else {
+                            L.marker([location.lat, location.lon], {title: `Latitude: ${location.lat} Longitude: ${location.lon}`, icon: greenIcon,}).addTo(markerGroup)
+                        }
                     } else {
-                        L.marker([location.lat, location.lon], {title:`Latitude: ${location.lat} Longitude: ${location.lon}`, icon: redIcon }).addTo(markerGroup)
+                        L.marker([location.lat, location.lon], {title:`Latitude: ${location.lat} Longitude: ${location.lon}`, }).addTo(markerGroup)
                     }
                     
                 }
