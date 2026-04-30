@@ -16,3 +16,18 @@
 
 ### Note:
 #### If I understand correctly, a teacher is supposed to be able to detect if her student is far from her. If that is indeed the case, my implementation of the bonus is partial. I implemented that if there is a student who is far from her teacher, she is in red, but there is no display that links a student to her group. I think it's just a bit more playing with the fields, but I'm afraid of delaying the submission, so I'm leaving it partial.
+
+#### colors - green - near teacher or has no teacher, red - not around teacher , blue - teacher
+
+## Screenshots
+
+![1](1.png)
+![2](2.png)
+![3](3.png)
+![4](4.png)
+![5](5.png)
+![6](6.png)
+![7](7.png)
+![8](8.png)
+![9](9.png)
+![10](10.png)
