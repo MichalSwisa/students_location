@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Trip Management</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://kit.fontawesome.com/620acfe083.js" crossorigin="anonymous"></script>
+  </head>
+  <body>
+    <!--<div id="root"></div>-->
+    <!--<h1>Students Locations Management</h1>-->
+
+    <div class="form-box">
+        <h1 id="formTitle">Add Teacher or Student</h1>
+        <form id="formID">
+            <div class="input-group">
+                <div class="input-field">
+                    <i class="fa-solid fa-id-card"></i>
+                    <input type="number" id="ID" placeholder="ID">
+                </div>
+                <div class="input-field">
+                    <i class="fa-solid fa-user"></i>
+                    <input type="text" id="name" placeholder="Full Name">
+                </div>
+                <div class="input-field">
+                    <i class="fa-solid fa-chalkboard-user"></i>
+                    <input type="text" id="class" placeholder="Class">
+                </div>
+            </div>
+
+            <div class="btn-field">
+                <button type="button" id="addstudentBtn">Add Student</button>
+                <button type="button" id="addteacherBtn">Add Teacher</button>
+                <button type="button" id="loginBtn">Login</button>
+                <button type="button" id="enterBtn">Enter</button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        let addStudentBtn = document.getElementById("addstudentBtn"); 
+        let addTeacherBtn = document.getElementById("addteacherBtn");
+        let loginBtn = document.getElementById("loginBtn");
+        let title = document.getElementById("formTitle");
+
+        addStudentBtn.onclick = async function() {
+            const id = document.getElementById("ID").value;
+            const full_name = document.getElementById("name").value;
+            const class_id = document.getElementById("class").value;
+            const response = 
+               await fetch("http://localhost:8000/students", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        id,
+                        full_name,
+                        class_id
+                    })
+                });
+        }
+        
+        addTeacherBtn.onclick = async function() {
+            const id = document.getElementById("ID").value;
+            const full_name = document.getElementById("name").value;
+            const class_id = document.getElementById("class").value;
+            const response = 
+               await fetch("http://localhost:8000/teachers", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        id,
+                        full_name,
+                        class_id
+                    })
+                });
+        }
+
+        
+        loginBtn.onclick = async function() {
+            const id = document.getElementById("ID").value;
+
+            const response = 
+               await fetch(`http://localhost:8000/login?id=${id}`, {
+                    method: "GET",
+                })
+            const data = await response.json();
+
+            if(data.error){
+                alert("You should add yourself before login!");
+            }
+            else{
+                localStorage.clear();
+                localStorage.setItem("id", data.innerdata.id);
+                localStorage.setItem("full_name", data.innerdata.full_name);
+                localStorage.setItem("class_id", data.innerdata.class_id);
+                localStorage.setItem("role", data.innerdata.role);
+
+                window.location.href = "dashboard.html";
+            }
+        }
+
+        enterBtn.onclick = function() {
+            if (localStorage.getItem("id")){
+                window.location.href = "dashboard.html";
+            }
+            else{
+                alert("You should login before entering the dashboard!");
+            }
+        }
+    </script>
+
+  </body>
+</html>

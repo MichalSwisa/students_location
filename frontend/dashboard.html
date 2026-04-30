@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Trip Management - in user page</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://kit.fontawesome.com/620acfe083.js" crossorigin="anonymous"></script>
+</head>
+
+<body>
+  <div class = "top">
+    <div class="data-group">
+      <div class="input-field">
+        <i class="fa-solid fa-id-card"></i>
+        <p id="id"></p>
+      </div>
+      <div class="input-field">
+        <i class="fa-solid fa-user"></i>
+        <p id="name"></p>
+      </div>
+      <div class="input-field">
+        <i class="fa-solid fa-chalkboard-user"></i>
+        <p id="class"></p>
+      </div>
+    </div>
+    <div class="btn-field">
+      <button type="button" id="signoutBtn">Sign Out</button>
+      <button type="button" id="backBtn">Back</button>
+    </div>
+  </div>
+
+  <div class="search-bar">
+    <div id="select">
+        <p id="selectText">All student and teachers</p>
+        <i class="fa-solid fa-caret-down"></i>
+        <ul id="list">
+            <li class="options" id="student-id">student by id</li>
+            <li class="options" id="teacher-id">teacher by id</li>
+            <li class="options" id="student-name">student by full name</li>
+            <li class="options" id="teacher-name">teacher by full name</li>
+            <li class="options" id="student-class">student by class</li>
+            <li class="options" id="teacher-class">teacher by class</li>
+            <li class="options" id="all-student-class">students by class of teacher (input irrelevant just enter something)</li>
+            <li class="options" id="all">all(input irrelevant just enter something)</li>
+        </ul>
+    </div>
+    <input type="text" id="inputfield" placeholder="Search In All Categories">
+    
+  </div>
+  <div class="scrollable-table">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Full Name</th>
+          <th>Class ID</th>
+        </tr>
+      </thead>
+      <tbody id="table-body">
+      </tbody>
+    </table>
+  </div>
+  </div>
+
+  <script>
+    let id = localStorage.getItem("id");
+    let full_name = localStorage.getItem("full_name");
+    let class_id = localStorage.getItem("class_id");
+
+    document.getElementById("id").textContent = id;
+    document.getElementById("name").textContent = full_name;
+    document.getElementById("class").textContent = class_id;
+
+    let select = document.getElementById("select");
+    let list = document.getElementById("list");
+    let selectText = document.getElementById("selectText");
+    let options = document.getElementsByClassName("options");
+    let inputfield = document.getElementById("inputfield");
+    
+    let selectedOption = "";
+    let sorted = false;
+    let tableData = [];
+    let all = false;
+
+    select.onclick = function(){
+        list.classList.toggle("open");
+    }
+
+    for(let option of options){
+      option.onclick = function(){
+        selectText.innerHTML = this.innerHTML;
+        inputfield.placeholder = "Search In " + selectText.innerHTML;
+        selectedOption = this.id;
+        document.getElementById("table-body").innerHTML = "";
+      }
+    }
+    
+    inputfield.onkeyup = async function(event) {
+      if(event.key === "Enter"){
+        const parameter = inputfield.value;
+        let url ='http://localhost:8000';
+        all = false;
+
+        if(selectedOption == "student-id"){
+          url += `/students?teacher_id=${id}&id=${parameter}`;
+        }
+        else if(selectedOption == "teacher-id"){
+          url += `/teachers?teacher_id=${id}&id=${parameter}`;
+        }
+        else if(selectedOption == "student-name"){
+          url += `/students?teacher_id=${id}&full_name=${parameter}`;
+        }
+        else if(selectedOption == "teacher-name"){
+          url += `/teachers?teacher_id=${id}&full_name=${parameter}`;
+        }
+        else if(selectedOption == "student-class"){
+          url += `/students?teacher_id=${id}&class_id=${parameter}`;
+        }
+        else if(selectedOption == "teacher-class"){
+          url += `/teachers?teacher_id=${id}&class_id=${parameter}`;
+        }
+        else if(selectedOption == "all-student-class"){
+            url += `/students?teacher_id=${id}&all=${true}`;
+        }
+        else{
+          all = true;
+          url += `/all?teacher_id=${id}`;
+        }
+
+        const response = await fetch(url, { method: "GET",})
+        const data = await response.json();
+
+
+        if(data.error){
+          alert("You should be a teacher to see the data!");
+        }
+        else{
+          if (localStorage.getItem("role") === "teacher") {
+            tableData = data.data;
+            
+            document.getElementById("table-body").innerHTML = "";
+
+            if(tableData.length === 0){
+              document.getElementById("table-body").innerHTML = `<tr>
+                                                                <td>x</td>
+                                                                <td>x</td>
+                                                                <td>x</td>
+                                                                </tr>`;
+            } else {
+              for (let person of tableData) {
+                let row = `<tr>
+                          <td>${person.id}</td>
+                          <td>${person.full_name}</td>
+                          <td>${person.class_id}</td>
+                          </tr>`;
+                document.getElementById("table-body").innerHTML += row;
+              }
+            }
+
+          } else {
+              alert("You should be a teacher to see the data!");
+          }
+        }
+      }
+    }
+
+
+
+    let signoutBtn = document.getElementById("signoutBtn");
+    let backBtn = document.getElementById("backBtn");
+
+    signoutBtn.onclick = function() {
+      localStorage.clear();
+      window.location.href = "index.html";
+    }
+
+    backBtn.onclick = function() {
+      window.location.href = "index.html";
+    }
+  </script>
+</body>
+
+</html>
